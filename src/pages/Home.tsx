@@ -2,18 +2,24 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Clock, ShieldCheck, Sparkles, Truck } from "lucide-react";
 import { categories } from "../data/categories";
-import { products } from "../data/products";
+import { getProductsForStore, storeCarriesCategory } from "../data/stores";
 import { SearchBar } from "../components/SearchBar";
 import { CategoryCard } from "../components/CategoryCard";
 import { ProductCard } from "../components/ProductCard";
+import { StoreSwitcher } from "../components/StoreSwitcher";
+import { useStore } from "../context/StoreContext";
 
 export function Home() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const { store } = useStore();
 
-  const popular = products.filter((p) => p.isPopular).slice(0, 8);
-  const deals = products.filter((p) => p.isDeal).slice(0, 6);
-  const budgetPicks = products.filter((p) => p.price <= 100).slice(0, 8);
+  const storeProducts = getProductsForStore(store?.id ?? null);
+  const storeCategories = store ? categories.filter((c) => storeCarriesCategory(store, c.id)) : categories;
+
+  const popular = storeProducts.filter((p) => p.isPopular).slice(0, 8);
+  const deals = storeProducts.filter((p) => p.isDeal).slice(0, 6);
+  const budgetPicks = storeProducts.filter((p) => p.price <= 100).slice(0, 8);
 
   const submitSearch = () => {
     navigate(query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : "/products");
@@ -56,6 +62,21 @@ export function Home() {
         </div>
       </section>
 
+      {/* Stores */}
+      <section className="mt-6">
+        <p className="mb-3 text-sm text-slate-500">
+          {store ? (
+            <>
+              Shopping at <span className="font-semibold text-slate-800">{store.name}</span> · {store.branch}.{" "}
+            </>
+          ) : (
+            <>Browsing all stores. </>
+          )}
+          Tap a store to shop from just that one, or browse everything.
+        </p>
+        <StoreSwitcher />
+      </section>
+
       {/* Trust strip */}
       <section className="mt-6 grid grid-cols-3 gap-2 md:gap-4">
         {[
@@ -85,7 +106,7 @@ export function Home() {
           </button>
         </div>
         <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:grid md:grid-cols-6 md:gap-4 md:px-0">
-          {categories.map((c) => (
+          {storeCategories.map((c) => (
             <CategoryCard key={c.id} category={c} />
           ))}
         </div>

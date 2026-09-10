@@ -41,6 +41,21 @@ export interface CartLine {
   quantity: number;
 }
 
+export interface Store {
+  id: string;
+  name: string;
+  branch: string;
+  area: string;
+  logoLabel: string;
+  logoUrl?: string;
+  color: string;
+  rating: number;
+  deliveryEta: string;
+  distanceKm: number;
+  categories: CategoryId[] | "all";
+  tagline: string;
+}
+
 export interface DeliverySlot {
   id: string;
   label: string;
@@ -66,4 +81,6 @@ export interface PlacedOrder {
   paymentLabel: string;
   placedAt: string;
   status?: OrderStatus;
+  storeId?: string;
+  storeName?: string;
 }

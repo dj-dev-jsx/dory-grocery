@@ -22,6 +22,8 @@ export const mockOrders: PlacedOrder[] = [
     paymentLabel: "GCash",
     placedAt: "2026-09-10T02:30:00.000Z",
     status: "out-for-delivery",
+    storeId: "sm-bgc",
+    storeName: "SM Supermarket",
   },
   {
     orderNumber: "DG-202609-4821",
@@ -34,6 +36,8 @@ export const mockOrders: PlacedOrder[] = [
     paymentLabel: "Credit / Debit Card",
     placedAt: "2026-09-05T06:05:00.000Z",
     status: "delivered",
+    storeId: "puregold-makati",
+    storeName: "Puregold Price Club",
   },
   {
     orderNumber: "DG-202608-3390",
@@ -46,6 +50,8 @@ export const mockOrders: PlacedOrder[] = [
     paymentLabel: "Cash on Delivery",
     placedAt: "2026-08-27T09:45:00.000Z",
     status: "delivered",
+    storeId: "robinsons-ortigas",
+    storeName: "Robinsons Supermarket",
   },
   {
     orderNumber: "DG-202608-1027",
@@ -58,6 +64,8 @@ export const mockOrders: PlacedOrder[] = [
     paymentLabel: "Credit / Debit Card",
     placedAt: "2026-08-11T11:15:00.000Z",
     status: "cancelled",
+    storeId: "puregold-makati",
+    storeName: "Puregold Price Club",
   },
 ];
 

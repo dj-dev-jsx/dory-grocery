@@ -5,6 +5,11 @@ import { formatPrice } from "../utils/format";
 export function OrderReceiptCard({ order }: { order: PlacedOrder }) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100 md:p-6">
+      {order.storeName && (
+        <p className="mb-4 text-xs text-slate-400">
+          Fulfilled by <span className="font-semibold text-slate-600">{order.storeName}</span>
+        </p>
+      )}
       <div className="grid gap-4 border-b border-slate-100 pb-4 md:grid-cols-3">
         <div className="flex items-start gap-2">
           <Clock size={16} className="mt-0.5 shrink-0 text-fresh-600" />

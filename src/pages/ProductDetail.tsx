@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
-import { getProduct, products } from "../data/products";
+import { getProduct } from "../data/products";
 import { getCategory } from "../data/categories";
+import { getDefaultStoreForCategory, getProductsForStore, getStoresForCategory, storeCarriesCategory } from "../data/stores";
 import { ProductImage } from "../components/ProductImage";
 import { StarRating } from "../components/StarRating";
 import { QuantitySelector } from "../components/QuantitySelector";
@@ -10,12 +11,16 @@ import { Button } from "../components/Button";
 import { ProductCard } from "../components/ProductCard";
 import { formatPrice } from "../utils/format";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
+import { useToast } from "../context/ToastContext";
 
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const product = getProduct(Number(id));
   const { getQuantity, addItem, setQuantity } = useCart();
+  const { store, selectStore } = useStore();
+  const { showToast } = useToast();
   const [selectedQty, setSelectedQty] = useState(1);
 
   useEffect(() => {
@@ -35,7 +40,21 @@ export function ProductDetail() {
 
   const cartQuantity = getQuantity(product.id);
   const category = getCategory(product.category);
-  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 6);
+  const isAvailable = store ? storeCarriesCategory(store, product.category) : true;
+  const related = getProductsForStore(store?.id ?? null)
+    .filter((p) => p.category === product.category && p.id !== product.id)
+    .slice(0, 6);
+
+  const handleAddToCart = (qty: number) => {
+    if (!store) {
+      const resolved = getDefaultStoreForCategory(product.category);
+      selectStore(resolved.id);
+      addItem(product.id, qty);
+      showToast(`Added ${product.name} to cart · now shopping at ${resolved.name}`);
+    } else {
+      addItem(product.id, qty);
+    }
+  };
 
   return (
     <div className="pb-36 md:pb-12">
@@ -51,9 +70,20 @@ export function ProductDetail() {
           <ProductImage product={product} size="lg" className="aspect-square w-full" />
 
           <div>
-            {category && (
-              <span className="text-xs font-semibold uppercase tracking-wide text-fresh-700">{category.name}</span>
-            )}
+            <div className="flex items-center justify-between gap-2">
+              {category && (
+                <span className="text-xs font-semibold uppercase tracking-wide text-fresh-700">{category.name}</span>
+              )}
+              {store ? (
+                <span className="flex items-center gap-1 text-xs text-slate-400">
+                  <span className={`h-1.5 w-1.5 rounded-full ${store.color}`} /> {store.name}
+                </span>
+              ) : (
+                <span className="text-xs text-slate-400">
+                  Available at {getStoresForCategory(product.category).length} stores
+                </span>
+              )}
+            </div>
             <h1 className="mt-1 text-2xl font-extrabold text-slate-900 md:text-3xl">{product.name}</h1>
             <p className="mt-1 text-sm text-slate-400">{product.unit}</p>
 
@@ -83,21 +113,31 @@ export function ProductDetail() {
             </div>
 
             {/* Desktop add-to-cart */}
-            <div className="mt-6 hidden items-center gap-4 md:flex">
-              {cartQuantity > 0 ? (
-                <>
-                  <QuantitySelector quantity={cartQuantity} onChange={(q) => setQuantity(product.id, q)} removeAtMin />
-                  <span className="text-sm text-slate-500">in your cart</span>
-                </>
-              ) : (
-                <>
-                  <QuantitySelector quantity={selectedQty} onChange={(q) => setSelectedQty(Math.max(1, q))} min={1} />
-                  <Button size="lg" onClick={() => addItem(product.id, selectedQty)}>
-                    Add to Cart · {formatPrice(product.price * selectedQty)}
-                  </Button>
-                </>
-              )}
-            </div>
+            {isAvailable ? (
+              <div className="mt-6 hidden items-center gap-4 md:flex">
+                {cartQuantity > 0 ? (
+                  <>
+                    <QuantitySelector quantity={cartQuantity} onChange={(q) => setQuantity(product.id, q)} removeAtMin />
+                    <span className="text-sm text-slate-500">in your cart</span>
+                  </>
+                ) : (
+                  <>
+                    <QuantitySelector quantity={selectedQty} onChange={(q) => setSelectedQty(Math.max(1, q))} min={1} />
+                    <Button size="lg" onClick={() => handleAddToCart(selectedQty)}>
+                      Add to Cart · {formatPrice(product.price * selectedQty)}
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="mt-6 hidden rounded-xl bg-amber-50 p-3 text-sm text-amber-700 md:block">
+                Not carried by {store?.name}.{" "}
+                <button onClick={() => navigate("/stores")} className="font-semibold underline">
+                  Switch stores
+                </button>{" "}
+                to buy this item.
+              </div>
+            )}
           </div>
         </div>
 
@@ -115,7 +155,14 @@ export function ProductDetail() {
 
       {/* Mobile sticky add-to-cart */}
       <div className="fixed inset-x-0 bottom-16 z-30 border-t border-slate-100 bg-white/95 p-3 backdrop-blur md:hidden">
-        {cartQuantity > 0 ? (
+        {!isAvailable ? (
+          <div className="rounded-xl bg-amber-50 p-3 text-center text-xs text-amber-700">
+            Not carried by {store?.name}.{" "}
+            <button onClick={() => navigate("/stores")} className="font-semibold underline">
+              Switch stores
+            </button>
+          </div>
+        ) : cartQuantity > 0 ? (
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">In your cart</span>
             <QuantitySelector quantity={cartQuantity} onChange={(q) => setQuantity(product.id, q)} removeAtMin />
@@ -123,7 +170,7 @@ export function ProductDetail() {
         ) : (
           <div className="flex items-center gap-3">
             <QuantitySelector quantity={selectedQty} onChange={(q) => setSelectedQty(Math.max(1, q))} min={1} />
-            <Button fullWidth onClick={() => addItem(product.id, selectedQty)}>
+            <Button fullWidth onClick={() => handleAddToCart(selectedQty)}>
               Add to Cart · {formatPrice(product.price * selectedQty)}
             </Button>
           </div>

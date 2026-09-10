@@ -9,6 +9,7 @@ import { Checkout } from "./pages/Checkout";
 import { Confirmation } from "./pages/Confirmation";
 import { Orders } from "./pages/Orders";
 import { OrderDetail } from "./pages/OrderDetail";
+import { Stores } from "./pages/Stores";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,6 +33,7 @@ function App() {
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/orders/:orderNumber" element={<OrderDetail />} />
+          <Route path="/stores" element={<Stores />} />
         </Route>
       </Routes>
     </>

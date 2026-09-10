@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SearchX } from "lucide-react";
 import { categories } from "../data/categories";
-import { products } from "../data/products";
+import { getProductsForStore, storeCarriesCategory } from "../data/stores";
 import { SearchBar } from "../components/SearchBar";
 import { ProductCard } from "../components/ProductCard";
 import { EmptyState } from "../components/EmptyState";
 import { Button } from "../components/Button";
+import { StoreSwitcher } from "../components/StoreSwitcher";
+import { useStore } from "../context/StoreContext";
 import type { CategoryId } from "../types";
 
 type SortOption = "popular" | "price-asc" | "price-desc" | "rating";
@@ -23,6 +25,13 @@ export function Products() {
   const activeCategory = searchParams.get("category") as CategoryId | null;
   const queryParam = searchParams.get("q") ?? "";
   const [sort, setSort] = useState<SortOption>("popular");
+  const { store } = useStore();
+
+  const storeProducts = useMemo(() => getProductsForStore(store?.id ?? null), [store]);
+  const storeCategories = useMemo(
+    () => (store ? categories.filter((c) => storeCarriesCategory(store, c.id)) : categories),
+    [store],
+  );
 
   const setCategory = (category: CategoryId | null) => {
     const next = new URLSearchParams(searchParams);
@@ -39,7 +48,7 @@ export function Products() {
   };
 
   const filtered = useMemo(() => {
-    let result = products;
+    let result = storeProducts;
     if (activeCategory) result = result.filter((p) => p.category === activeCategory);
     if (queryParam.trim()) {
       const q = queryParam.trim().toLowerCase();
@@ -63,12 +72,22 @@ export function Products() {
         sorted.sort((a, b) => Number(b.isPopular) - Number(a.isPopular));
     }
     return sorted;
-  }, [activeCategory, queryParam, sort]);
+  }, [storeProducts, activeCategory, queryParam, sort]);
 
   const activeCategoryName = categories.find((c) => c.id === activeCategory)?.name;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 md:px-6 md:pt-8">
+      <p className="mb-3 text-sm text-slate-500">
+        {store ? (
+          <>
+            Shopping at <span className="font-semibold text-slate-700">{store.name}</span>
+          </>
+        ) : (
+          "Browsing all stores"
+        )}
+      </p>
+      <StoreSwitcher className="mb-4" />
       <SearchBar value={queryParam} onChange={runSearch} className="mb-4" />
 
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
@@ -80,7 +99,7 @@ export function Products() {
         >
           All
         </button>
-        {categories.map((c) => (
+        {storeCategories.map((c) => (
           <button
             key={c.id}
             onClick={() => setCategory(c.id)}

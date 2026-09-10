@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { PackageSearch, RotateCcw } from "lucide-react";
 import { getAllOrders } from "../data/orders";
+import { getStore } from "../data/stores";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
 import { ProductImage } from "../components/ProductImage";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { Button } from "../components/Button";
@@ -12,10 +14,13 @@ import type { PlacedOrder } from "../types";
 function OrderCard({ order }: { order: PlacedOrder }) {
   const navigate = useNavigate();
   const { addItems } = useCart();
+  const { selectStore } = useStore();
   const visibleItems = order.items.slice(0, 4);
   const extraCount = order.items.length - visibleItems.length;
+  const orderStore = order.storeId ? getStore(order.storeId) : undefined;
 
   const reorder = () => {
+    if (order.storeId) selectStore(order.storeId);
     addItems(order.items.map(({ product, quantity }) => ({ productId: product.id, quantity })));
     navigate("/cart");
   };
@@ -26,6 +31,12 @@ function OrderCard({ order }: { order: PlacedOrder }) {
         <div>
           <p className="text-sm font-semibold text-slate-800">{order.orderNumber}</p>
           <p className="text-xs text-slate-400">{formatDate(order.placedAt)}</p>
+          {order.storeName && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+              {orderStore && <span className={`h-1.5 w-1.5 rounded-full ${orderStore.color}`} />}
+              {order.storeName}
+            </p>
+          )}
         </div>
         <OrderStatusBadge status={order.status ?? "delivered"} />
       </div>

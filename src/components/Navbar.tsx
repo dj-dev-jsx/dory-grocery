@@ -1,11 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingCart, Waves } from "lucide-react";
+import { ChevronDown, ShoppingCart, Store, Waves } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
 import { SearchBar } from "./SearchBar";
 
 export function Navbar() {
   const { itemCount } = useCart();
+  const { store } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -63,6 +65,26 @@ export function Navbar() {
             )}
           </Link>
         </div>
+      </div>
+
+      <div className="border-t border-slate-100 px-4 py-1.5 md:px-6">
+        <Link
+          to="/stores"
+          className="mx-auto flex max-w-7xl items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-fresh-600"
+        >
+          <Store size={12} className="shrink-0" />
+          <span className="truncate">
+            {store ? (
+              <>
+                Shopping at <span className="font-semibold text-slate-700">{store.name}</span>
+                <span className="hidden sm:inline"> · {store.branch}</span>
+              </>
+            ) : (
+              "Browsing all stores"
+            )}
+          </span>
+          <ChevronDown size={12} className="shrink-0" />
+        </Link>
       </div>
     </header>
   );

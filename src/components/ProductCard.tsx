@@ -1,7 +1,11 @@
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import type { MouseEvent } from "react";
 import type { Product } from "../types";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
+import { useToast } from "../context/ToastContext";
+import { getDefaultStoreForCategory, getStoresForCategory } from "../data/stores";
 import { ProductImage } from "./ProductImage";
 import { StarRating } from "./StarRating";
 import { QuantitySelector } from "./QuantitySelector";
@@ -10,7 +14,22 @@ import { formatPrice } from "../utils/format";
 export function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate();
   const { getQuantity, addItem, setQuantity } = useCart();
+  const { store, selectStore } = useStore();
+  const { showToast } = useToast();
   const quantity = getQuantity(product.id);
+  const availableStoreCount = store ? 0 : getStoresForCategory(product.category).length;
+
+  const handleQuickAdd = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!store) {
+      const resolved = getDefaultStoreForCategory(product.category);
+      selectStore(resolved.id);
+      addItem(product.id);
+      showToast(`Added ${product.name} to cart · now shopping at ${resolved.name}`);
+    } else {
+      addItem(product.id);
+    }
+  };
 
   return (
     <div
@@ -30,6 +49,16 @@ export function ProductCard({ product }: { product: Product }) {
         <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{product.name}</h3>
         <p className="text-xs text-slate-400">{product.unit}</p>
         <StarRating rating={product.rating} size={13} />
+        {store ? (
+          <p className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            <span className={`h-1.5 w-1.5 rounded-full ${store.color}`} />
+            {store.name}
+          </p>
+        ) : (
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            Available at {availableStoreCount} store{availableStoreCount === 1 ? "" : "s"}
+          </p>
+        )}
       </div>
 
       <div className="mt-3 flex items-end justify-between gap-2">
@@ -46,10 +75,7 @@ export function ProductCard({ product }: { product: Product }) {
           <button
             type="button"
             aria-label={`Add ${product.name} to cart`}
-            onClick={(e) => {
-              e.stopPropagation();
-              addItem(product.id);
-            }}
+            onClick={handleQuickAdd}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-fresh-600 text-white shadow-sm transition-colors hover:bg-fresh-700 active:bg-fresh-800"
           >
             <Plus size={16} />

@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { getOrder } from "../data/orders";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
 import { OrderReceiptCard } from "../components/OrderReceiptCard";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { Button } from "../components/Button";
@@ -11,6 +12,7 @@ export function OrderDetail() {
   const { orderNumber } = useParams();
   const navigate = useNavigate();
   const { addItems } = useCart();
+  const { selectStore } = useStore();
   const order = getOrder(orderNumber ?? "");
 
   if (!order) {
@@ -25,6 +27,7 @@ export function OrderDetail() {
   }
 
   const reorder = () => {
+    if (order.storeId) selectStore(order.storeId);
     addItems(order.items.map(({ product, quantity }) => ({ productId: product.id, quantity })));
     navigate("/cart");
   };

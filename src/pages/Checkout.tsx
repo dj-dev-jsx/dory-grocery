@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, MapPin } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useStore } from "../context/StoreContext";
 import { Button } from "../components/Button";
 import { OrderSummary } from "../components/OrderSummary";
 import { deliverySlots, mockAddresses, paymentMethods } from "../data/checkoutOptions";
@@ -48,6 +49,7 @@ function SelectableCard({ selected, onClick, title, subtitle }: SelectableCardPr
 
 export function Checkout() {
   const { items, subtotal, clearCart } = useCart();
+  const { store } = useStore();
   const navigate = useNavigate();
 
   const [addressId, setAddressId] = useState(mockAddresses[0].id);
@@ -61,7 +63,7 @@ export function Checkout() {
 
   const deliveryFee = useMemo(() => computeDeliveryFee(subtotal, slotId), [subtotal, slotId]);
 
-  if (items.length === 0) {
+  if (items.length === 0 || !store) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="text-lg font-semibold text-slate-700">Your cart is empty</p>
@@ -85,6 +87,8 @@ export function Checkout() {
       paymentLabel: payment.label,
       placedAt: new Date().toISOString(),
       status: "preparing",
+      storeId: store.id,
+      storeName: store.name,
     };
 
     setTimeout(() => {
@@ -96,7 +100,11 @@ export function Checkout() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-44 pt-6 md:px-6 md:pb-12 md:pt-8">
-      <h1 className="mb-5 text-xl font-extrabold text-slate-900 md:text-2xl">Checkout</h1>
+      <h1 className="text-xl font-extrabold text-slate-900 md:text-2xl">Checkout</h1>
+      <p className="mb-5 flex items-center gap-1.5 text-sm text-slate-500">
+        Ordering from <span className={`h-2 w-2 rounded-full ${store.color}`} />
+        <span className="font-semibold text-slate-700">{store.name}</span>
+      </p>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div className="space-y-6 md:col-span-2">
