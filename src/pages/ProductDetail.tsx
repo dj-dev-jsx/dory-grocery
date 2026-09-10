@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
 import { getProduct } from "../data/products";
 import { getCategory } from "../data/categories";
-import { getDefaultStoreForCategory, getProductsForStore, getStoresForCategory, storeCarriesCategory } from "../data/stores";
+import { getProductsForStore, getStoresForCategory, storeCarriesCategory } from "../data/stores";
 import { ProductImage } from "../components/ProductImage";
 import { StarRating } from "../components/StarRating";
 import { QuantitySelector } from "../components/QuantitySelector";
@@ -12,15 +12,13 @@ import { ProductCard } from "../components/ProductCard";
 import { formatPrice } from "../utils/format";
 import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
-import { useToast } from "../context/ToastContext";
 
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const product = getProduct(Number(id));
-  const { getQuantity, addItem, setQuantity } = useCart();
-  const { store, selectStore } = useStore();
-  const { showToast } = useToast();
+  const { getQuantity, setQuantity } = useCart();
+  const { store, requestAddToCart } = useStore();
   const [selectedQty, setSelectedQty] = useState(1);
 
   useEffect(() => {
@@ -46,14 +44,7 @@ export function ProductDetail() {
     .slice(0, 6);
 
   const handleAddToCart = (qty: number) => {
-    if (!store) {
-      const resolved = getDefaultStoreForCategory(product.category);
-      selectStore(resolved.id);
-      addItem(product.id, qty);
-      showToast(`Added ${product.name} to cart · now shopping at ${resolved.name}`);
-    } else {
-      addItem(product.id, qty);
-    }
+    requestAddToCart(product, qty);
   };
 
   return (

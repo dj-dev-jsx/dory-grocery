@@ -4,8 +4,7 @@ import type { MouseEvent } from "react";
 import type { Product } from "../types";
 import { useCart } from "../context/CartContext";
 import { useStore } from "../context/StoreContext";
-import { useToast } from "../context/ToastContext";
-import { getDefaultStoreForCategory, getStoresForCategory } from "../data/stores";
+import { getStoresForCategory } from "../data/stores";
 import { ProductImage } from "./ProductImage";
 import { StarRating } from "./StarRating";
 import { QuantitySelector } from "./QuantitySelector";
@@ -13,22 +12,14 @@ import { formatPrice } from "../utils/format";
 
 export function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate();
-  const { getQuantity, addItem, setQuantity } = useCart();
-  const { store, selectStore } = useStore();
-  const { showToast } = useToast();
+  const { getQuantity, setQuantity } = useCart();
+  const { store, requestAddToCart } = useStore();
   const quantity = getQuantity(product.id);
   const availableStoreCount = store ? 0 : getStoresForCategory(product.category).length;
 
   const handleQuickAdd = (e: MouseEvent) => {
     e.stopPropagation();
-    if (!store) {
-      const resolved = getDefaultStoreForCategory(product.category);
-      selectStore(resolved.id);
-      addItem(product.id);
-      showToast(`Added ${product.name} to cart · now shopping at ${resolved.name}`);
-    } else {
-      addItem(product.id);
-    }
+    requestAddToCart(product);
   };
 
   return (
